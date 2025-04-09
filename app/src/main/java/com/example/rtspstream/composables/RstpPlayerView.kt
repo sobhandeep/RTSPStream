@@ -23,7 +23,6 @@ fun RTSPPlayer(
     context: Context,
     modifier: Modifier = Modifier
 ) {
-    // Fresh player every time rtspUrl changes
     val player = remember(rtspUrl) {
         ExoPlayer.Builder(context).build().apply {
             val mediaItem = MediaItem.fromUri(rtspUrl)
@@ -34,7 +33,6 @@ fun RTSPPlayer(
         }
     }
 
-    // Release player on exit
     DisposableEffect(key1 = player) {
         onDispose {
             player.release()

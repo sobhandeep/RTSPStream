@@ -1,6 +1,5 @@
 package com.example.rtspstream.composables
 
-import android.app.Activity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,7 +42,7 @@ fun VideoScreen() {
             value = rtspUrl,
             onValueChange = {
                 rtspUrl = it
-                playStream = false // stop current playback
+                playStream = false
             },
             label = { Text("RTSP URL") },
             modifier = Modifier.fillMaxWidth()
