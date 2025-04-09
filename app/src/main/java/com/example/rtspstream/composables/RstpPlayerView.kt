@@ -1,65 +1,56 @@
 package com.example.rtspstream.composables
 
-import android.annotation.SuppressLint
+import android.content.Context
+import android.util.Log
 import android.view.ViewGroup
-import android.widget.FrameLayout
+import androidx.annotation.OptIn
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
-import org.videolan.libvlc.LibVLC
-import org.videolan.libvlc.Media
-import org.videolan.libvlc.MediaPlayer
-import org.videolan.libvlc.util.VLCVideoLayout
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.rtsp.RtspMediaSource
+import androidx.media3.ui.PlayerView
 
-@SuppressLint("RememberReturnType")
+@OptIn(UnstableApi::class)
 @Composable
-fun RtspPlayerView(
-    modifier: Modifier = Modifier,
-    rtspUrl: String
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    val libVLC = remember {
-        LibVLC(context, arrayListOf("--network-caching=300", "--rtsp-tcp"))
-    }
-    val mediaPlayer = remember {
-        MediaPlayer(libVLC)
+fun RTSPPlayer(rtspUrl: String, context: Context, modifier: Modifier = Modifier) {
+    Log.d("RTSP", rtspUrl)
+    val player = remember(rtspUrl) {
+        ExoPlayer.Builder(context).build().apply {
+            val mediaItem = MediaItem.fromUri(rtspUrl.toUri())
+            val mediaSource = RtspMediaSource.Factory().createMediaSource(mediaItem)
+            setMediaSource(mediaSource)
+            prepare()
+            playWhenReady = true
+        }
     }
 
     DisposableEffect(Unit) {
-        val media = Media(libVLC, rtspUrl.toUri()).apply {
-            setHWDecoderEnabled(true, false)
-        }
-
-        mediaPlayer.media = media
-        mediaPlayer.play()
-
         onDispose {
-            mediaPlayer.stop()
-            mediaPlayer.release()
-            media.release()
-            libVLC.release()
+            player.release()
         }
     }
 
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.height(300.dp)
+            .fillMaxWidth(),
         factory = {
-            FrameLayout(it).apply {
-                val videoLayout = VLCVideoLayout(it)
-                layoutParams = FrameLayout.LayoutParams(
+            PlayerView(context).apply {
+                this.player = player
+                layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
+                    ViewGroup.LayoutParams.WRAP_CONTENT
                 )
-                addView(videoLayout)
-                mediaPlayer.attachViews(videoLayout, null, false, false)
+                useController = true
             }
-        },
-        update = {
-            // Called on recomposition
         }
     )
 }

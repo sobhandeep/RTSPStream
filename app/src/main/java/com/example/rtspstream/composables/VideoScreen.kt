@@ -1,8 +1,6 @@
 package com.example.rtspstream.composables
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,22 +17,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import com.example.rtspstream.MainActivity
-import org.videolan.libvlc.LibVLC
-import org.videolan.libvlc.Media
-import org.videolan.libvlc.MediaPlayer
 
 @Composable
-fun VideoScreen(libVLC: LibVLC, mediaPlayer: MediaPlayer) {
+fun VideoScreen() {
     val context = LocalContext.current
-    var rtspUrl by remember { mutableStateOf("rtsp://192.168.226.186:5540/ch0") }
+    var rtspUrl by remember { mutableStateOf("rtsp://100.88.45.49:5540/ch0") }
+    var playStream by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
+
         OutlinedTextField(
             value = rtspUrl,
             onValueChange = { rtspUrl = it },
@@ -44,36 +39,14 @@ fun VideoScreen(libVLC: LibVLC, mediaPlayer: MediaPlayer) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        RtspPlayerView(
-            rtspUrl = rtspUrl,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-        )
+        Button(onClick = { playStream = true }, modifier = Modifier.fillMaxWidth()) {
+            Text("Play Stream")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = {
-                val filePath = "${context.filesDir}/recorded.mp4"
-                val media = Media(libVLC, rtspUrl.toUri()).apply {
-                    addOption(":sout=#file{dst=$filePath}")
-                    addOption(":sout-keep")
-                }
-                mediaPlayer.media = media
-                mediaPlayer.play()
-            }) {
-                Text("Record")
-            }
-
-            Button(onClick = {
-                (context as? MainActivity)?.enterPipMode()
-            }) {
-                Text("Pop Out")
-            }
+        if (playStream) {
+            RTSPPlayer(rtspUrl = rtspUrl, context = context)
         }
     }
 }
